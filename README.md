@@ -9,3 +9,7 @@ In our commercial project, we typically save state after each actor method invoc
 ## Steps to Reproduce
 * Run the project
 * Watch "Diagnostics Events" view, see that the save of value "2112" on actor de-activation doesn't work (fails silently).
+
+## Notes
+* environment: VS 2015 enterprise, SF SDK 2.5, SF RT 5.5
+* this repo is based on standard service-fabric reliable-actor-project creation from VS 2015 enterprise.  The second commit contains the code which demonstrates the issue.
