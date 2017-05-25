@@ -35,16 +35,35 @@ namespace SwhitReliableActor1
         /// This method is called whenever an actor is activated.
         /// An actor is activated the first time any of its methods are invoked.
         /// </summary>
-        protected override Task OnActivateAsync()
+        protected override async Task OnActivateAsync()
         {
-            ActorEventSource.Current.ActorMessage(this, "Actor activated.");
-
+            ActorEventSource.Current.ActorMessage(this, "Actor activating....");
             // The StateManager is this actor's private state store.
             // Data stored in the StateManager will be replicated for high-availability for actors that use volatile or persisted state storage.
             // Any serializable object can be saved in the StateManager.
             // For more information, see https://aka.ms/servicefabricactorsstateserialization
 
-            return this.StateManager.TryAddStateAsync("count", 0);
+            const int initialValue = 0;
+            var added = await this.StateManager.TryAddStateAsync("count", initialValue);
+            ActorEventSource.Current.ActorMessage(this,$"attempt to add actor with state-name 'count' of initial value [{initialValue}] returned {added}");
+            if (!added)
+            {
+                //var preExistingValue = await ISwhitReliableActor1.GetCountAsync(CancellationToken.None);
+                var preExistingValue = await ((ISwhitReliableActor1) this).GetCountAsync(CancellationToken.None);
+                ActorEventSource.Current.ActorMessage(this, $"initial-value-add failure indicates pre-existing value exists. That value is {preExistingValue}");
+            }
+            ActorEventSource.Current.ActorMessage(this, "Actor activated.");
+        }
+
+        protected override async Task OnDeactivateAsync()
+        {
+            const int finalValue = 2112;
+            ActorEventSource.Current.ActorMessage(this, "Actor deactivating....");
+            ActorEventSource.Current.ActorMessage(this, $"DEACTIVATION - BEGIN attempt to save actor state with state-name 'count' of final value [{finalValue}]...");
+            await this.StateManager.SetStateAsync("count", finalValue);
+            ActorEventSource.Current.ActorMessage(this, $"DEACTIVATION -   END attempt to save actor state with state-name 'count' of final value [{finalValue}] - no exceptions thrown.");
+            ActorEventSource.Current.ActorMessage(this, "Actor deactivated.");
+            return;
         }
 
         /// <summary>
